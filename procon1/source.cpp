@@ -2,11 +2,16 @@
 /************************************************
 *                                               *
 *                P r o c o n 1                  *
-*           ユーザーインターフェース            *
+*         U s e r   I n t e r f a c e           *
 *                                               *
 *      (c)  Shogo Yazawa, Haruki Hirasawa       *
 *                                               *
 *************************************************/
+
+//仕様定義
+//通常ユーザーに表示するUIには基本日本語を使用する。
+//Adminユーザーに表示するUIには英語を使用する。
+//メッセージを表示する際はメッセージボックスを基本使用する。
 
 #include <stdio.h>
 #include <iostream>
@@ -14,35 +19,49 @@
 
 // 使用中変数一覧
 // startwin => main関数内、スタートウィンドウ WINDOW*型
-// inputch1 => main関数内、switch文入力用 char型
+// inpch1 => main関数内、switch文入力用 char型
+// msgwin => msgbox関数内、メッセージボックス WINDOW*型
+// msg => msgbox関数内、メッセージ内容 const char*型
+// ch => msgbox関数内、メッセージボックス入力用 int型
+// y, x => msgbox関数内、メッセージボックスの位置 int型
+
 
 //プロトタイプ宣言
 int msgbox(int y, int x, const char* msg);
+WINDOW* helpwin;
 
 int main() {
+	
 	char inpch1;
 	initscr();
 	cbreak();
-	echo();
+	noecho();
 	start_color();
 	init_pair(1, COLOR_WHITE, COLOR_BLUE);
 
 	//startwinの作成
 	WINDOW* startwin = newwin(20, 60, 2, 2);
-	mvwprintw(startwin,2,4,"Procon1"); //"Procon1"は後ほど変更
-	mvwprintw(startwin, 4, 4, "hキーを押してヘルプを表示");
 	bkgd(COLOR_PAIR(1));
-	box(startwin, '|', '=');
-	refresh();
-	
-	inpch1 = wgetch(startwin);
 
 	while (1) {
 		clear();
+		box(startwin, '|', '=');
+		mvwprintw(startwin, 2, 4, "Procon1"); //"Procon1"は後ほど変更
+		mvwprintw(startwin, 4, 4, "Hキーを押してヘルプを表示");
+		refresh();
+		inpch1 = wgetch(startwin);
 		switch (inpch1) {
 		case 'h':
 		case 'H':
-			clear();
+			helpwin = newwin(20, 60, 4, 4);
+			box(helpwin, '|', '=');
+			mvwprintw(helpwin, 2, 2, "ヘルプメニュー");
+			mvwprintw(helpwin, 4, 2, "キー\t説明");
+			mvwprintw(helpwin, 6, 2, "H\tヘルプメニューを表示");
+			mvwprintw(helpwin, 7, 2, "X\t終了");
+			refresh();
+			wrefresh(helpwin);
+			wgetch(helpwin);
 			break;
 		case 'x':
 		case 'X':
@@ -55,10 +74,8 @@ int main() {
 				msgbox(6, 12, "キャンセルされました。");
 			}
 		default:
-			mvwprintw(startwin, 6, 2, "無効なキーです。もう一度入力してください。");
-			wrefresh(startwin);
-			inpch1 = wgetch(startwin);
-			continue;
+			msgbox(6, 10, "無効な入力です。Hキーでヘルプを表示");
+			break;
 		}
 	}
 	return 0;
