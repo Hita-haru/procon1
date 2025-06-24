@@ -31,6 +31,10 @@
 // chkwnd1 => chkwnd関数内、認証ウィンドウ WINDOW*型
 // stat1 => chkwnd関数内、認証ステータス int型
 // level => chkwnd関数内、認証レベル int型
+// errorcode => errorex関数内、エラーコード int型
+// sod => errorex関数内、エラーメッセージウィンドウ WINDOW*型
+// adwin => adminmenu関数内、管理者メニュー WINDOW*型
+// inpch3 => adminmenu関数内、入力用 char型
 
 //プロトタイプ宣言
 int msgbox(int y, int x, const char* msg);
@@ -38,6 +42,8 @@ int errorbox(int y, int x, const char* msg);
 int successbox(int y, int x, const char* msg);
 int chkwnd(int level);
 int errorex(int errorcode);
+int adminmenu();
+int promptbox(int y, int x, const char* msg, char* ret);
 
 //グローバル変数
 int max_x,max_y,min_x,min_y;
@@ -70,8 +76,12 @@ int main() {
 		switch (inpch1) {
 		case '#':
 			if (chkwnd(2) == 1) {
-				errorex(2);
+				adminmenu();
 			}
+			else {
+				break;
+			}
+			break;
 		case 'h':
 		case 'H':
 			helpwin = newwin(20, 60, 4, 4);
@@ -155,9 +165,7 @@ int chkwnd(int level) {
 		mvwprintw(chkwnd1, 4, 2, "危険な操作です。続けますか？(y/n)");
 		break;
 	default:
-		errorbox(6, 10, "無効な値での呼び出し");
-		endwin();
-		return -1;
+		errorex(2);
 		break;
 	}
 	mvwprintw(chkwnd1, 6, 2, "レベル: %d", level);
@@ -204,12 +212,90 @@ int errorex(int errorcode) {
 		mvwprintw(sod, 6, 2, "不明なエラー");
 		mvwprintw(sod, 8, 2, "Unknown error");
 		wbkgd(sod, COLOR_PAIR(2));
+		break;
+	case 2:
+		mvwprintw(sod, 6, 2, "例外を処理できません");
+		mvwprintw(sod, 8, 2, "Unhandled exception");
+		wbkgd(sod, COLOR_PAIR(1));
+		break;
 	default:
 		mvwprintw(sod, 6, 2, "エラー情報を取得できませんでした");
 		mvwprintw(sod, 8, 2, "Undefined error");
 		wbkgd(sod, COLOR_PAIR(2));
+		break;
 	}
 	wrefresh(sod);
 	wgetch(sod);
 	exit(-1);
+}
+
+int adminmenu() {
+	char inpch3;
+	WINDOW* adwin = newwin(20, 60, 5, 5);
+	box(adwin, '|', '=');
+	mvwprintw(adwin, 2, 2, "Admin menu");
+	mvwprintw(adwin, 4, 2, "Error display demo: 1");
+	mvwprintw(adwin, 5, 2, "Error display demo: 2");
+	mvwprintw(adwin, 6, 2, "Error display demo: -");
+	mvwprintw(adwin, 7, 2, "MsgBox demo: 3");
+	mvwprintw(adwin, 8, 2, "Check Window demo: 4");
+	mvwprintw(adwin, 9, 2, "ErrorBox demo: 5");
+	mvwprintw(adwin, 10, 2, "SuccessBox demo: 6");
+	mvwprintw(adwin, 11, 2, "PromptBox demo: 7");
+	mvwprintw(adwin, 13, 2, "Exit: X");
+	refresh();
+	while (1) {
+		inpch3 = wgetch(adwin);
+		switch (inpch3) {
+		case '1':
+			errorex(1);
+			break;
+		case '2':
+			errorex(2);
+			break;
+		case '-':
+			errorex(-1);
+			break;
+		case '3':
+			msgbox(6, 10, "DEMO");
+			break;
+		case '4':
+			chkwnd(1);
+			break;
+		case '5':
+			errorbox(6, 10, "DEMO");
+			break;
+		case '6':
+			successbox(6, 10, "DEMO");
+			break;
+		case '7':
+			{
+				char ret[20];
+				promptbox(6, 10, "Input something:", ret);
+				msgbox(8, 10, ret);
+			}
+			break;
+		case 'X':
+		case 'x':
+			delwin(adwin);
+			endwin();
+			return 0;
+		default:
+			errorbox(6, 8, "Undefined value");
+			break;
+		}
+	}
+	return 0;
+}
+
+int promptbox(int y, int x, const char* msg,char* ret) {
+	WINDOW* msgwin = newwin(10, 40, y, x);
+	box(msgwin, '|', '=');
+	mvwprintw(msgwin, 2, 2, "%s", msg);
+	wrefresh(msgwin);
+	echo();
+	wgetstr(msgwin,ret);
+	noecho();
+	delwin(msgwin);
+	return 0;
 }
